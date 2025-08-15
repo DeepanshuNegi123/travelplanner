@@ -8,3 +8,9 @@ const messageSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model("Message", messageSchema);
+
+/* 
+  use models.message.js 
+  - better industry wide nomenculture 
+  -improve the code structure 
+*/
