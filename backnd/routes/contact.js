@@ -3,7 +3,9 @@ const router = express.Router();
 const Message = require("../models/message");
 const mongoose = require("mongoose");
 
-
+/*  - have the files Name as routes.contact.js 
+    -use better practises
+*/
 
 router.post("/", async (req, res) => {
   const { name, email, message, userId } = req.body;

@@ -38,3 +38,11 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
   console.log(`🚀 Server is running on port ${port}`);
 });
+
+/* 
+  1. use module in import/export type 
+  2. use better industry wide nomenculture and directory structure
+    eg : models.filename.js
+
+  3. don't track node_modules in the projects - It gives bad impression to recruters or visitors.
+*/
