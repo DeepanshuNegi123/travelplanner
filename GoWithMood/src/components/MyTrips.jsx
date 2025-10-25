@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import {
   Calendar,
   MapPin,
@@ -12,65 +12,54 @@ import {
 } from "lucide-react"
 
 const MyTrips = () => {
-  const [trips] = useState([
-    {
-      id: "1",
-      destination: "Paris, France",
-      country: "France",
-      startDate: "2024-03-15",
-      endDate: "2024-03-22",
-      travelers: 2,
-      status: "upcoming",
-      image:
-        "https://images.pexels.com/photos/338515/pexels-photo-338515.jpeg?auto=compress&cs=tinysrgb&w=800",
-      photos: [
-        "https://images.pexels.com/photos/338515/pexels-photo-338515.jpeg?auto=compress&cs=tinysrgb&w=400",
-        "https://images.pexels.com/photos/1308940/pexels-photo-1308940.jpeg?auto=compress&cs=tinysrgb&w=400"
-      ]
-    },
-    {
-      id: "2",
-      destination: "Tokyo, Japan",
-      country: "Japan",
-      startDate: "2024-01-10",
-      endDate: "2024-01-20",
-      travelers: 1,
-      status: "completed",
-      image:
-        "https://images.pexels.com/photos/2506923/pexels-photo-2506923.jpeg?auto=compress&cs=tinysrgb&w=800",
-      rating: 5,
-      notes:
-        "Amazing trip! The cherry blossoms were beautiful and the food was incredible.",
-      photos: [
-        "https://images.pexels.com/photos/2506923/pexels-photo-2506923.jpeg?auto=compress&cs=tinysrgb&w=400",
-        "https://images.pexels.com/photos/161251/senso-ji-temple-japan-kyoto-landmark-161251.jpeg?auto=compress&cs=tinysrgb&w=400",
-        "https://images.pexels.com/photos/2070033/pexels-photo-2070033.jpeg?auto=compress&cs=tinysrgb&w=400"
-      ]
-    },
-    {
-      id: "3",
-      destination: "Santorini, Greece",
-      country: "Greece",
-      startDate: "2023-08-05",
-      endDate: "2023-08-12",
-      travelers: 2,
-      status: "completed",
-      image:
-        "https://images.pexels.com/photos/161815/santorini-oia-greece-water-161815.jpeg?auto=compress&cs=tinysrgb&w=800",
-      rating: 4,
-      notes:
-        "Beautiful sunsets and amazing Greek cuisine. Would definitely visit again!",
-      photos: [
-        "https://images.pexels.com/photos/161815/santorini-oia-greece-water-161815.jpeg?auto=compress&cs=tinysrgb&w=400",
-        "https://images.pexels.com/photos/1285625/pexels-photo-1285625.jpeg?auto=compress&cs=tinysrgb&w=400"
-      ]
-    }
-  ])
+  const [trips, setTrips] = useState([])
+  const [loading, setLoading] = useState(true)
 
   const [selectedTrip, setSelectedTrip] = useState(null)
   const [showGallery, setShowGallery] = useState(false)
   const [uploadedPhotos, setUploadedPhotos] = useState({})
   const fileInputRef = useRef(null)
+
+  // Fetch user trips from database
+  useEffect(() => {
+    const fetchTrips = async () => {
+      try {
+        const userId = localStorage.getItem("userId")
+        if (!userId) {
+          setLoading(false)
+          return
+        }
+
+        const response = await fetch(`http://localhost:4002/api/auth/user/${userId}`)
+        if (response.ok) {
+          const userData = await response.json()
+          const userTrips = userData.trips || []
+          
+          // Transform trips to match the expected format
+          const formattedTrips = userTrips.map((trip, index) => ({
+            id: `trip_${index}`,
+            destination: trip.destination?.name || "Unknown Destination",
+            country: trip.destination?.countryName || "Unknown Country",
+            startDate: trip.checkIn || new Date().toISOString().split('T')[0],
+            endDate: trip.checkOut || new Date().toISOString().split('T')[0],
+            travelers: trip.travelers || 1,
+            status: "upcoming", // Default status
+            image: trip.destination?.image || "https://images.pexels.com/photos/338515/pexels-photo-338515.jpeg?auto=compress&cs=tinysrgb&w=800",
+            photos: [trip.destination?.image || "https://images.pexels.com/photos/338515/pexels-photo-338515.jpeg?auto=compress&cs=tinysrgb&w=400"],
+            totalCost: trip.totalCost || 0
+          }))
+          
+          setTrips(formattedTrips)
+        }
+      } catch (error) {
+        console.error("Error fetching trips:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchTrips()
+  }, [])
 
   const getStatusColor = status => {
     switch (status) {
@@ -118,6 +107,21 @@ const MyTrips = () => {
 
   const getAllPhotos = trip => {
     return [...trip.photos, ...(uploadedPhotos[trip.id] || [])]
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading your trips...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -193,9 +197,27 @@ const MyTrips = () => {
           </div>
         </div>
 
-        {/* Trips Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {trips.map(trip => (
+        {/* Empty State */}
+        {trips.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <MapPin className="w-12 h-12 text-gray-400" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">No trips yet</h3>
+            <p className="text-gray-600 mb-8 max-w-md mx-auto">
+              Start planning your first adventure! Use our AI-powered trip planner to discover amazing destinations.
+            </p>
+            <a
+              href="/plan"
+              className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Plan Your First Trip
+            </a>
+          </div>
+        ) : (
+          /* Trips Grid */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {trips.map(trip => (
             <div
               key={trip.id}
               className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105"
@@ -334,7 +356,8 @@ const MyTrips = () => {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        )}
 
         {/* Gallery Modal */}
         {showGallery && selectedTrip && (

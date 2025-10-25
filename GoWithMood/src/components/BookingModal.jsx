@@ -12,7 +12,7 @@ import {
   Coffee
 } from "lucide-react"
 
-const BookingModal = ({ isOpen, onClose, destination, hotel }) => {
+const BookingModal = ({ isOpen, onClose, destination, hotel, onBook }) => {
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState({
     checkIn: "",
@@ -54,11 +54,18 @@ const BookingModal = ({ isOpen, onClose, destination, hotel }) => {
   const handleBooking = async () => {
     setIsProcessing(true)
     try {
-      // Simulate booking process
-      await new Promise(resolve => setTimeout(resolve, 3000))
-      setCurrentStep(4) // Success step
+      // Call the actual booking function passed from parent
+      if (onBook) {
+        await onBook()
+        setCurrentStep(4) // Success step
+      } else {
+        // Fallback: simulate booking process
+        await new Promise(resolve => setTimeout(resolve, 3000))
+        setCurrentStep(4) // Success step
+      }
     } catch (error) {
       console.error("Booking failed:", error)
+      alert("Booking failed. Please try again.")
     } finally {
       setIsProcessing(false)
     }

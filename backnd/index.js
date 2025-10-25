@@ -12,11 +12,8 @@ app.use(express.json());
 const port = process.env.PORT || 4002;
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => {
-  console.log(" MongoDB connected");
+mongoose.connect(process.env.MONGO_URI).then(() => {
+  console.log("✅ MongoDB connected");
 }).catch(err => {
   console.error("❌ MongoDB connection failed:", err.message);
 });
@@ -29,6 +26,9 @@ const contactRoutes = require("./routes/contact");
 app.use("/api/contact", contactRoutes);
 
 app.use("/api/trip", require("./routes/trip"));
+
+// Proxy chat route (forwards requests to OpenRouter with server-side key)
+app.use("/api/chat", require("./routes/chat"));
 
 // Root route
 app.get('/', (req, res) => {

@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "backend": "cd backend && nodemon server.js",
+    "backend": "cd ../backnd && nodemon index.js",
     "dev:fullstack": "concurrently \"npm run dev\" \"npm run backend\""
   },
   "dependencies": {

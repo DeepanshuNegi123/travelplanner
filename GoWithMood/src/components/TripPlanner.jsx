@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import BookingModal from "./BookingModal";
 import {
   Calendar,
@@ -119,9 +119,11 @@ const TripPlanner = () => {
 
     const userId = localStorage.getItem("userId");
     if (!userId) {
-      alert("User not logged in.");
+      alert("Please log in to book a trip. You can register or login using the login button in the header.");
       return;
     }
+
+    console.log("🔍 User ID from localStorage:", userId);
 
     const totalCost = selectedHotel.price * parseInt(duration) + selectedDestination.estimatedCost;
 
@@ -135,6 +137,8 @@ const TripPlanner = () => {
       totalCost
     };
 
+    console.log("📝 Frontend: Sending trip booking request:", { userId, trip });
+
     setLoading(true);
     try {
       const response = await fetch("http://localhost:4002/api/trip/book", {
@@ -144,6 +148,8 @@ const TripPlanner = () => {
         },
         body: JSON.stringify({ userId, trip })
       });
+
+      console.log("📝 Frontend: Response status:", response.status);
 
       const data = await response.json();
 
@@ -187,7 +193,7 @@ const TripPlanner = () => {
     </div>
   );
 
-  const Step1 = () => (
+  const Step1 = useCallback(() => (
     <div className="bg-white rounded-3xl p-8 shadow-xl">
       <h2 className="text-3xl font-bold text-center mb-8">Plan Your Perfect Trip</h2>
       
@@ -213,19 +219,26 @@ const TripPlanner = () => {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6 mb-8">
-        <div>
-          <label className="block text-sm font-medium mb-2">Budget (USD)</label>
-          <div className="relative">
-            <DollarSign className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-            <input
-              type="number"
-              value={budget}
-              onChange={(e) => setBudget(e.target.value)}
-              placeholder="e.g., 2000"
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            />
-          </div>
-        </div>
+        
+
+          <div>
+  <label className="block text-sm font-medium mb-2">Budget (USD)</label>
+  <div className="relative">
+    <DollarSign className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+    <input
+      key="budget-input"
+      type="number"
+      value={budget}
+      onChange={(e) => setBudget(e.target.value)}
+      placeholder="e.g., 2000"
+      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      autoComplete="off"
+    />
+  </div>
+</div>
+
+
+
         <div>
           <label className="block text-sm font-medium mb-2">Duration (days)</label>
           <div className="relative">
@@ -325,9 +338,9 @@ const TripPlanner = () => {
         )}
       </button>
     </div>
-  );
+  ), [selectedMood, budget, duration, travelers, checkIn, checkOut, travelerType, loading]);
 
-  const Step2 = () => (
+  const Step2 = useCallback(() => (
     <div className="bg-white rounded-3xl p-8 shadow-xl">
       <h2 className="text-3xl font-bold text-center mb-8">Choose Your Destination</h2>
       {destinations.length === 0 ? (
@@ -383,9 +396,9 @@ const TripPlanner = () => {
         </div>
       )}
     </div>
-  );
+  ), [destinations, selectedDestination, loading]);
 
-  const Step3 = () => (
+  const Step3 = useCallback(() => (
     <div className="bg-white rounded-3xl p-8 shadow-xl">
       <div className="flex items-center mb-8">
         {countryFlag && (
@@ -445,9 +458,9 @@ const TripPlanner = () => {
         ))}
       </div>
     </div>
-  );
+  ), [selectedDestination, hotels, selectedHotel, countryFlag, loading]);
 
-  const VRModal = () => (
+  const VRModal = useCallback(() => (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
@@ -499,7 +512,7 @@ const TripPlanner = () => {
         )}
       </div>
     </div>
-  );
+  ), [vrContent, selectedDestination]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">

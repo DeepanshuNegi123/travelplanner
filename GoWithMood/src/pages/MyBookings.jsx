@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   Calendar,
   MapPin,
@@ -12,63 +12,59 @@ import {
 } from "lucide-react"
 
 const MyBookings = () => {
-  const [bookings] = useState([
-    {
-      id: "1",
-      bookingId: "BK123456",
-      hotelName: "Grand Palace Hotel",
-      destination: "Paris, France",
-      checkIn: "2024-03-15",
-      checkOut: "2024-03-18",
-      guests: 2,
-      rooms: 1,
-      totalAmount: 1247.5,
-      status: "confirmed",
-      hotelImage:
-        "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=800",
-      hotelRating: 4.8,
-      bookingDate: "2024-02-10",
-      confirmationNumber: "CNF789012"
-    },
-    {
-      id: "2",
-      bookingId: "BK123457",
-      hotelName: "Seaside Resort & Spa",
-      destination: "Maldives",
-      checkIn: "2024-04-20",
-      checkOut: "2024-04-25",
-      guests: 2,
-      rooms: 1,
-      totalAmount: 2850.0,
-      status: "confirmed",
-      hotelImage:
-        "https://images.pexels.com/photos/189296/pexels-photo-189296.jpeg?auto=compress&cs=tinysrgb&w=800",
-      hotelRating: 4.9,
-      bookingDate: "2024-02-15",
-      confirmationNumber: "CNF789013"
-    },
-    {
-      id: "3",
-      bookingId: "BK123458",
-      hotelName: "Mountain View Lodge",
-      destination: "Queenstown, New Zealand",
-      checkIn: "2024-01-10",
-      checkOut: "2024-01-15",
-      guests: 4,
-      rooms: 2,
-      totalAmount: 1680.0,
-      status: "completed",
-      hotelImage:
-        "https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=800",
-      hotelRating: 4.6,
-      bookingDate: "2023-12-05",
-      confirmationNumber: "CNF789014"
-    }
-  ])
+  const [bookings, setBookings] = useState([])
+  const [loading, setLoading] = useState(true)
 
   const [selectedBooking, setSelectedBooking] = useState(null)
   const [filterStatus, setFilterStatus] = useState("all")
   const [searchTerm, setSearchTerm] = useState("")
+
+  // Fetch user bookings from database
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const userId = localStorage.getItem("userId")
+        if (!userId) {
+          setLoading(false)
+          return
+        }
+
+        const response = await fetch(`http://localhost:4002/api/auth/user/${userId}`)
+        if (response.ok) {
+          const userData = await response.json()
+          const userTrips = userData.trips || []
+          
+          // Transform trips to booking format
+          const formattedBookings = userTrips.map((trip, index) => ({
+            id: `booking_${index}`,
+            bookingId: `BK${Date.now()}${index}`,
+            hotelName: trip.hotel?.name || "Hotel Not Specified",
+            destination: `${trip.destination?.name || "Unknown"}, ${trip.destination?.countryName || "Unknown"}`,
+            checkIn: trip.checkIn || new Date().toISOString().split('T')[0],
+            checkOut: trip.checkOut || new Date().toISOString().split('T')[0],
+            guests: trip.travelers || 1,
+            rooms: 1, // Default to 1 room
+            totalAmount: trip.totalCost || 0,
+            status: "confirmed", // Default status
+            hotelImage: trip.destination?.image || "https://images.pexels.com/photos/338515/pexels-photo-338515.jpeg?auto=compress&cs=tinysrgb&w=800",
+            hotelRating: 4.5, // Default rating
+            bookingDate: new Date().toISOString().split('T')[0],
+            confirmationNumber: `CNF${Date.now()}${index}`
+          }))
+          
+          setBookings(formattedBookings)
+        } else {
+          console.error("Failed to fetch user data")
+        }
+      } catch (error) {
+        console.error("Error fetching bookings:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchBookings()
+  }, [])
 
   const filteredBookings = bookings.filter(booking => {
     const matchesStatus =
@@ -123,6 +119,19 @@ const MyBookings = () => {
       month: "short",
       day: "numeric"
     })
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-12">
+            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-lg text-gray-600">Loading your bookings...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

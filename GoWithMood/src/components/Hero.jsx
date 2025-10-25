@@ -90,19 +90,18 @@ const Hero = () => {
         setApiError(null);
 
         try {
-            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            // Send request to our backend proxy which holds the API key securely
+            const response = await fetch("http://localhost:4002/api/chat", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${import.meta.env.VITE_OPENROUTER_KEY}`,
-                    "HTTP-Referer": window.location.href,
                 },
                 body: JSON.stringify({
                     model: "deepseek/deepseek-r1-0528",
                     messages: [
                         {
                             role: "system",
-                            content: "You are a helpful travel assistant. Provide travel destination suggestions in this format:\n\nDestinations:\n1. Place A\n2. Place B\n3. Place C\n\nGive brief reasons for each suggestion."
+                            content: "You are a helpful travel assistant. Provide travel destination suggestions in plain text format without any markdown formatting, asterisks, or special characters. Use this format:\n\nDestinations:\n1. Place A - Brief description\n2. Place B - Brief description\n3. Place C - Brief description\n\nGive brief reasons for each suggestion in plain text only."
                         },
                         {
                             role: "user",
@@ -113,11 +112,29 @@ const Hero = () => {
             });
 
             if (!response.ok) {
-                throw new Error(`API error: ${response.status}`);
+                // Attempt to read body for a more helpful error message (OpenRouter returns JSON or text)
+                let text = null;
+                try {
+                    text = await response.text();
+                } catch (e) {
+                    // ignore
+                }
+                console.error("OpenRouter API error:", response.status, text || response.statusText);
+                throw new Error(`API error ${response.status}: ${text || response.statusText}`);
             }
 
             const data = await response.json();
-            const aiReply = data.choices?.[0]?.message?.content || "I couldn't process your request.";
+            const rawReply = data.choices?.[0]?.message?.content || "I couldn't process your request.";
+            
+            // Clean up the AI response by removing asterisks and other markdown formatting
+            const aiReply = rawReply
+                .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown
+                .replace(/\*(.*?)\*/g, '$1') // Remove italic markdown
+                .replace(/\*+/g, '') // Remove any remaining asterisks
+                .replace(/#{1,6}\s*/g, '') // Remove markdown headers
+                .replace(/```[\s\S]*?```/g, '') // Remove code blocks
+                .replace(/`(.*?)`/g, '$1') // Remove inline code
+                .trim();
 
             setChatHistory(prev => [...prev, { type: "ai", message: aiReply }]);
         } catch (err) {
