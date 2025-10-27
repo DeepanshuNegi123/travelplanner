@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "view-db": "node view_db.js",
+    "db-viewer": "node start-db-viewer.js",
+    "test-cancel": "node test-cancel-booking.js"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +18,7 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
+    "mongo-express": "^1.1.0-rc-3",
     "mongoose": "^8.16.5",
     "nodemon": "^3.1.10"
   }

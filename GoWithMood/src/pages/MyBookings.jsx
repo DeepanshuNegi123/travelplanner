@@ -14,6 +14,7 @@ import {
 const MyBookings = () => {
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
+  const [cancelling, setCancelling] = useState(null) // Track which booking is being cancelled
 
   const [selectedBooking, setSelectedBooking] = useState(null)
   const [filterStatus, setFilterStatus] = useState("all")
@@ -37,6 +38,7 @@ const MyBookings = () => {
           // Transform trips to booking format
           const formattedBookings = userTrips.map((trip, index) => ({
             id: `booking_${index}`,
+            tripIndex: index, // ✅ Add trip index for cancellation
             bookingId: `BK${Date.now()}${index}`,
             hotelName: trip.hotel?.name || "Hotel Not Specified",
             destination: `${trip.destination?.name || "Unknown"}, ${trip.destination?.countryName || "Unknown"}`,
@@ -119,6 +121,58 @@ const MyBookings = () => {
       month: "short",
       day: "numeric"
     })
+  }
+
+  // ✅ Cancel booking function
+  const handleCancelBooking = async (bookingId, tripIndex) => {
+    const userId = localStorage.getItem("userId")
+    
+    if (!userId) {
+      alert("Please log in to cancel bookings")
+      return
+    }
+
+    // Confirm cancellation
+    const confirmed = window.confirm(
+      `Are you sure you want to cancel this booking?\n\nThis action cannot be undone and the booking will be permanently deleted from your account.`
+    )
+
+    if (!confirmed) return
+
+    setCancelling(bookingId)
+
+    try {
+      const response = await fetch(
+        `http://localhost:4002/api/trip/cancel/${userId}/${tripIndex}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      )
+
+      const data = await response.json()
+
+      if (response.ok) {
+        console.log("✅ Booking cancelled successfully:", data)
+        
+        // Remove the cancelled booking from the local state
+        setBookings(prevBookings => 
+          prevBookings.filter(booking => booking.id !== bookingId)
+        )
+        
+        alert("✅ Booking cancelled successfully!")
+      } else {
+        console.error("❌ Cancel booking failed:", data.message)
+        alert(`❌ Failed to cancel booking: ${data.message}`)
+      }
+    } catch (error) {
+      console.error("🔥 Cancel booking error:", error)
+      alert("❌ Something went wrong. Please try again.")
+    } finally {
+      setCancelling(null)
+    }
   }
 
   if (loading) {
@@ -353,8 +407,26 @@ const MyBookings = () => {
                       </button>
 
                       {booking.status === "confirmed" && (
-                        <button className="bg-red-100 text-red-700 px-4 py-2 rounded-lg hover:bg-red-200 transition-colors">
-                          Cancel Booking
+                        <button 
+                          onClick={() => handleCancelBooking(booking.id, booking.tripIndex)}
+                          disabled={cancelling === booking.id}
+                          className={`px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 ${
+                            cancelling === booking.id 
+                              ? "bg-gray-100 text-gray-500 cursor-not-allowed" 
+                              : "bg-red-100 text-red-700 hover:bg-red-200"
+                          }`}
+                        >
+                          {cancelling === booking.id ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                              <span>Cancelling...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>❌</span>
+                              <span>Cancel Booking</span>
+                            </>
+                          )}
                         </button>
                       )}
                     </div>

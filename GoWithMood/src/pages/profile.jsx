@@ -124,19 +124,19 @@ const Profile = () => {
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-blue-50 p-4 rounded-lg text-center">
-                    <p className="text-2xl font-bold text-blue-600">12</p>
+                    <p className="text-2xl font-bold text-blue-600">1</p>
                     <p className="text-sm text-gray-600">Trips Taken</p>
                   </div>
                   <div className="bg-green-50 p-4 rounded-lg text-center">
-                    <p className="text-2xl font-bold text-green-600">8</p>
+                    <p className="text-2xl font-bold text-green-600">1</p>
                     <p className="text-sm text-gray-600">Countries Visited</p>
                   </div>
                   <div className="bg-purple-50 p-4 rounded-lg text-center">
-                    <p className="text-2xl font-bold text-purple-600">24</p>
+                    <p className="text-2xl font-bold text-purple-600">1</p>
                     <p className="text-sm text-gray-600">Cities Explored</p>
                   </div>
                   <div className="bg-yellow-50 p-4 rounded-lg text-center">
-                    <p className="text-2xl font-bold text-yellow-600">156</p>
+                    <p className="text-2xl font-bold text-yellow-600">2</p>
                     <p className="text-sm text-gray-600">Photos Shared</p>
                   </div>
                 </div>
@@ -164,10 +164,7 @@ const Profile = () => {
                       />
                     </svg>
                   </div>
-                  <div>
-                    <p className="font-medium">Checked in at Paris, France</p>
-                    <p className="text-sm text-gray-500">2 days ago</p>
-                  </div>
+                  
                 </div>
                 <div className="flex items-start">
                   <div className="flex-shrink-0 h-10 w-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
@@ -181,7 +178,7 @@ const Profile = () => {
                     </svg>
                   </div>
                   <div>
-                    <p className="font-medium">Posted a new review</p>
+                    <p className="font-medium">Posted a new Photo</p>
                     <p className="text-sm text-gray-500">1 week ago</p>
                   </div>
                 </div>
